@@ -27,6 +27,8 @@ namespace Voltide.Core
             _providers.Add(new LogitechProvider());
             _providers.Add(new MchoseProvider());
             _providers.Add(new AsusRogProvider());
+            _providers.Add(new ATKA9AiraddProvider());
+            _providers.Add(new ATKN9V2UltimateProvider());
         }
 
         public List<DeviceSnapshot> Snapshot()

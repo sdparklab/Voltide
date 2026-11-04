@@ -730,7 +730,7 @@ namespace Voltide.UI
                 }
 
                 // Same speed as the old 16 ms tick: 0.28 per frame at 60 fps.
-                _rateT[i] += delta * 0.28f * (dt / 0.016f);
+                _rateT[i] += delta * Math.Min(1f, 0.28f * (dt / 0.016f));
                 fast = true;
             }
 

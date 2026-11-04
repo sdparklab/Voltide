@@ -24,6 +24,8 @@ namespace Voltide.UI
 
         // A second right-click replaces the popup instead of stacking another copy.
         private TrayMenuForm _menuForm;
+        private BatteryAlertForm _alertForm;
+        private readonly BatteryAlertState _alerts = new BatteryAlertState();
 
 
         internal static readonly Color MenuMuted = Color.FromArgb(135, 135, 135); // card status line
@@ -209,6 +211,9 @@ namespace Voltide.UI
                     if (!string.IsNullOrEmpty(s.Info.ShortModel)) row.Name = s.Info.ShortModel;
                     else if (!string.IsNullOrEmpty(s.Info.Model)) row.Name = s.Info.Model;
                     else row.Name = s.Info.Brand;
+                    DeviceInfo device = s.Info;
+                    row.Name = DeviceAliases.Get(device.Id) ?? row.Name;
+                    row.Rename = delegate { RenameDevice(device); };
 
                     if (HasLevel(s))
                     {
@@ -263,6 +268,72 @@ namespace Voltide.UI
             return s != null && s.Reading != null && s.Reading.Online && s.Reading.Percent.HasValue;
         }
 
+        private void RenameDevice(DeviceInfo device)
+        {
+            if (_menuForm != null) _menuForm.Close();
+            using (Form dialog = new Form())
+            {
+                dialog.Text = "设置设备别名";
+                dialog.FormBorderStyle = FormBorderStyle.FixedDialog;
+                dialog.StartPosition = FormStartPosition.CenterScreen;
+                dialog.AutoScaleMode = AutoScaleMode.Dpi;
+                dialog.ShowInTaskbar = false;
+                dialog.MinimizeBox = false;
+                dialog.MaximizeBox = false;
+                dialog.ClientSize = new Size(340, 115);
+
+                Label label = new Label();
+                label.Text = device.Model + "（留空恢复原名）";
+                label.AutoEllipsis = true;
+                label.SetBounds(12, 12, 316, 24);
+                TextBox input = new TextBox();
+                input.MaxLength = 40;
+                input.Text = DeviceAliases.Get(device.Id) ?? "";
+                input.SetBounds(12, 41, 316, 24);
+                Button save = new Button();
+                save.Text = "保存";
+                save.DialogResult = DialogResult.OK;
+                save.SetBounds(170, 77, 75, 27);
+                Button cancel = new Button();
+                cancel.Text = "取消";
+                cancel.DialogResult = DialogResult.Cancel;
+                cancel.SetBounds(253, 77, 75, 27);
+                dialog.Controls.AddRange(new Control[] { label, input, save, cancel });
+                dialog.AcceptButton = save;
+                dialog.CancelButton = cancel;
+                dialog.ActiveControl = input;
+                if (dialog.ShowDialog() != DialogResult.OK) return;
+
+                try
+                {
+                    DeviceAliases.Save(device.Id, input.Text);
+                    _form.Invalidate();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("无法保存设备别名。\n" + ex.Message, "Voltide",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        private void UpdateBatteryAlerts(List<DeviceSnapshot> snapshots)
+        {
+            foreach (DeviceSnapshot device in snapshots)
+            {
+                if (!HasLevel(device) || device.Reading.Sleeping ||
+                    device.Info.ProviderName == "XInput") continue;
+                int percent = device.Reading.Percent.Value;
+                if (_alerts.Update(device.Info.Id, percent, device.Reading.Charging) == 0) continue;
+
+                if (_alertForm == null || _alertForm.IsDisposed) _alertForm = new BatteryAlertForm();
+                string name = DeviceAliases.Get(device.Info.Id) ?? device.Info.Name ?? device.Info.Model;
+                _alertForm.SetReading(device.Info.Id, name, percent);
+            }
+            if (_alertForm != null && !_alertForm.IsDisposed && !_alertForm.Visible)
+                _alertForm.ShowNearTray();
+        }
+
         // ------------------------------------------------------------- refresh
 
         private void RefreshNow()
@@ -295,7 +366,9 @@ namespace Voltide.UI
                 {
                     _form.BeginInvoke(new MethodInvoker(delegate
                     {
-                        _form.UpdateSnapshot(_manager.Snapshot());
+                        List<DeviceSnapshot> snapshots = _manager.Snapshot();
+                        _form.UpdateSnapshot(snapshots);
+                        UpdateBatteryAlerts(snapshots);
                     }));
                 }
                 catch
@@ -317,6 +390,7 @@ namespace Voltide.UI
 
         public void Dispose()
         {
+            if (_alertForm != null) _alertForm.Dispose();
             // The popup is a separate top-level window: closing the tray app must not
             // leave it on screen.
             if (_menuForm != null && !_menuForm.IsDisposed)

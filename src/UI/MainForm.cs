@@ -487,13 +487,21 @@ namespace Voltide.UI
         /// Wired and wireless transports of the same device collapse into one card.
         /// Two genuinely identical mice stay as two cards because both are live.
         /// </summary>
-        private static List<DeviceSnapshot> CollapseTransports(List<DeviceSnapshot> input)
+        internal static List<DeviceSnapshot> CollapseTransports(List<DeviceSnapshot> input)
         {
             List<DeviceSnapshot> result = new List<DeviceSnapshot>();
             Dictionary<string, int> slot = new Dictionary<string, int>();
 
             foreach (DeviceSnapshot s in input)
             {
+                // A paired child has its own identity even when the same model
+                // on another receiver is awake and this one is asleep.
+                if (s.Info.ReceiverId != null)
+                {
+                    result.Add(s);
+                    continue;
+                }
+
                 string key = s.Info.Brand + "|" + s.Info.Model;
 
                 int index;

@@ -106,6 +106,12 @@ namespace Voltide
                 Console.WriteLine("brand   : " + s.Info.Brand);
                 Console.WriteLine("model   : " + s.Info.Model);
                 Console.WriteLine("vid/pid : " + s.Info.VendorId.ToString("X4") + ":" + s.Info.ProductId.ToString("X4"));
+                if (s.Info.ReceiverId != null)
+                {
+                    Console.WriteLine("receiver: " + s.Info.ReceiverId);
+                    Console.WriteLine("id      : " + s.Info.Id);
+                    Console.WriteLine("kind    : " + s.Info.Kind);
+                }
                 Console.WriteLine("path    : " + s.Info.HidPath);
                 Console.WriteLine("online  : " + s.Reading.Online);
                 Console.WriteLine("percent : " + (s.Reading.Percent.HasValue ? s.Reading.Percent.Value.ToString() + "%" : "null"));

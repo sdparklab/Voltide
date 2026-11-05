@@ -25,6 +25,7 @@ namespace Voltide.Core
     public class DeviceInfo
     {
         public string Id;
+        public string ReceiverId;    // shared receiver identity for an explicitly paired child
         public string Name;
         public string Brand;
         public string Model;

@@ -215,11 +215,18 @@ namespace Voltide.Interop
         }
     }
 
+    internal interface IHidReportSession : IDisposable
+    {
+        bool Write(byte[] report, int timeoutMs);
+        byte[] Read(int timeoutMs);
+        void Flush(int idleMs);
+    }
+
     /// <summary>
     /// One open HID handle. Uses overlapped I/O so a blocking read never
     /// races a write on the same handle (that combination kills the process).
     /// </summary>
-    public sealed class HidSession : IDisposable
+    public sealed class HidSession : IHidReportSession
     {
         private IntPtr _handle;
         private IntPtr _evt;

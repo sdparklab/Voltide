@@ -48,6 +48,7 @@
 | ROG | AZOTH EXTREME（夜魔 Extreme） | `0B05:1ACE` | 64 字节帧 |
 | ROG | Delta II、Pelta | VID `0B05` | 64 字节，0xFF00 |
 | 泰度 TAIDU | TSG809 | VID `A8A5` | 厂商自定义 |
+| 索尼 SONY | PS5 DualSense / DualSense Edge | `054C:0CE6`、`054C:0DF2` | 有线 Report 0x01 / 蓝牙 Report 0x31 |
 | IMECOO | P1 | `3554:FB34` | 17 字节 |
 | ATK | A9 Air 大师+（鼠标） | `373B:1278` | 17 字节，和校验 0x4D |
 | ATK | N9 V2 Ultimate（耳机） | `373B:1262` | 64 字节，report 0x55 |

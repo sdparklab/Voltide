@@ -7,33 +7,36 @@ using Voltide.Interop;
 namespace Voltide.Providers
 {
     /// <summary>
-    /// MCHOSE (迈丛) A7 Ultra 无线鼠标。接收器 VID 0x5253 / PID 0x1020，
-    /// 与 A5 V3 的 0x3837 不同品牌集合：A7 Ultra 使用独立的 0x5253 无线电
-    /// 接收器（RealTek 方案），在厂商用途页 0xFF01 上以 65 字节 Feature Report
-    /// 承载电池协议。
+    /// MCHOSE (迈丛) A7 Ultra 无线鼠标。
     ///
-    /// 协议与 MCHOSE A5 V3 相同（0x11 查询 / 0x06 ost / XOR 0xFF 编码），
-    /// 仅 VID 与唤醒序列细节不同。实机（A7 Ultra，PID 0x1020，内部鼠标 PID
-    /// 0x0011）验证：必须先向 0xFF01 集合发送 bond 命令(0x03)唤醒厂商通道，
-    /// 再发送 ost 命令(0x06)查询；随后 GET_FEATURE 返回 65 字节，payload =
-    /// bytes[2..]，XOR 0xFF 解码。固件在两个 bank 间交替（XOR 与明文），
-    /// 两者都返回相同的 payload。
+    /// A7 Ultra 使用独立的 RealTek 接收器 VID 0x5253（区别于 A5 V3 的 0x3837）。
+    /// 注意 HID 枚举随连接方式切换，同一时刻只会暴露一个 FF01 集合：
+    ///   - 2.4G 无线：接收器 0x5253:0x1020
+    ///   - USB 有线：鼠标本体 0x5253:0x0011
+    ///   - 蓝牙：走 BLE GATT（Battery Service 0x180F/0x2A19），不经过 USB HID，
+    ///     本适配器不处理，故此处仅覆盖 USB 有线与 2.4G 两种模式。
+    ///
+    /// 协议与 A5 V3 相同（0x11 查询 / 0x06 ost / XOR 0xFF 编码），仅 VID 与唤醒
+    /// 序列不同。先发 bond 命令(0x03)唤醒厂商通道，再发 ost 命令(0x06)查询；
+    /// A7 Ultra 不产生 A5 那样的中断-IN ACK，改为在 ost 后等待约 50ms 让固件
+    /// 刷新 feature bank，再 GET_FEATURE 读取（立即读会拿到全 0）。
     ///
     ///   解码后（bytes[2..]，去除 reportId 与命令回显）：
-    ///     payload[0..1] = 接收器 VID（0x5253 小端）
+    ///     payload[0..1] = VID（0x5253 小端）
     ///     payload[2..3] = 鼠标内部 PID（0x0011 = A7 Ultra）
     ///     payload[4..7] = 固件版本
-    ///     payload[8]    = 连接位字段
+    ///     payload[8]    = 连接位字段，mode = flags & 7：
+    ///                        0 = USB 有线，1 = 2.4G，2 = 蓝牙
     ///     payload[9]    = 电量百分比（0–100）
-    ///     payload[10]   = 充电状态（0=电池供电, 1=充电中）
+    ///     payload[10]   = 充电状态（0=放电, 1=充电中）
     ///
-    /// 实机验证（2026-11-07）：vid=5253 pid=0011 fw=0x00050407 battery=95 charge=0。
-    /// 与 A5 V3 不同，A7 Ultra 的 ACK（中断-IN "e5 06"）不出现，但 GET_FEATURE
-    /// 在 bond 唤醒后直接返回新鲜数据，因此无需等待 ACK。
+    /// 实机验证（2026-11-07）：
+    ///   无线 1020：flags=0x09 mode=1(2.4G) battery=95 charge=0
+    ///   有线 0011：flags=0x00 mode=0(USB)  battery=95 charge=1
     /// </summary>
     public class MchoseA7UltraProvider : IDeviceProvider
     {
-        private const ushort MchoseRadioVid = 0x5253;   // A7 Ultra 专用接收器
+        private const ushort MchoseVid = 0x5253;   // A7 Ultra 专用 VID（接收器与本体同 VID）
         private const ushort FeatureLen = 65;
         private const ushort PageVendor = 0xFF01;
         private const byte RidQuery = 0x11;
@@ -52,7 +55,7 @@ namespace Voltide.Providers
 
             foreach (HidDeviceInfo h in list)
             {
-                if (h.VendorId != MchoseRadioVid) continue;
+                if (h.VendorId != MchoseVid) continue;
                 if (h.UsagePage != PageVendor) continue;
                 if (h.FeatureReportLength != FeatureLen) continue;
 
@@ -105,13 +108,13 @@ namespace Voltide.Providers
                         if (!ReadOst(s, out payload)) continue;
 
                         int vid = payload[0] | (payload[1] << 8);
+                        int flags = payload[8];
                         int level = payload[9];
                         int charge = payload[10];
 
                         r.Raw = Hex(payload);
-                        r.Detail = "2.4G";
 
-                        if (vid != MchoseRadioVid || level <= 0 || level > 100)
+                        if (vid != MchoseVid || level <= 0 || level > 100)
                         {
                             r.Sleeping = true;
                             r.Error = "设备休眠";
@@ -121,7 +124,7 @@ namespace Voltide.Providers
                         r.Percent = level;
                         r.Level = BatteryMath.FromPercent(level);
                         r.Charging = charge != 0;
-                        if (r.Charging) r.Detail = "2.4G 充电中";
+                        r.Detail = ModeLabel(flags);
                         r.Online = true;
                         return r;
                     }
@@ -140,6 +143,22 @@ namespace Voltide.Providers
             }
 
             return r;
+        }
+
+        /// <summary>
+        /// 连接方式取自 payload[8] 的低 3 位（mode = flags &amp; 7）：
+        /// 0 = USB 有线，1 = 2.4G。蓝牙(mode=2)不会经过本适配器——蓝牙连接时
+        /// 设备走 BLE GATT，USB HID 集合挂起，Discover 根本枚举不到。
+        /// </summary>
+        private static string ModeLabel(int flags)
+        {
+            switch (flags & 7)
+            {
+                case 0: return "USB 有线";
+                case 1: return "2.4G";
+                case 2: return "蓝牙";
+                default: return "模式 " + (flags & 7);
+            }
         }
 
         /// <summary>SET_FEATURE: reportId, command XOR-inverted, 0xFF filler.</summary>

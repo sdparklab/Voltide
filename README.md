@@ -45,6 +45,7 @@
 | 迈丛 MCHOSE | K99 v2、G75 Pro | `3554:FA09` | 20 字节帧 |
 | 迈丛 MCHOSE | K7 V2 Ultra+ | `3837:1014` | 64 字节 |
 | 迈丛 MCHOSE | A5 V3 | VID `3837` | 65 字节 Feature |
+| 迈丛 MCHOSE | A7 Ultra | VID `5253` | 65 字节 Feature |
 | ROG | AZOTH EXTREME（夜魔 Extreme） | `0B05:1ACE` | 64 字节帧 |
 | ROG | Delta II、Pelta | VID `0B05` | 64 字节，0xFF00 |
 | 泰度 TAIDU | TSG809 | VID `A8A5` | 厂商自定义 |
@@ -135,6 +136,7 @@ powershell -ExecutionPolicy Bypass -File pack.ps1 -Target dist
 
 - **罗技** —— HID++ 2.0。特性 `0x1004` 的功能 1 返回百分比；老款接收器回退到特性 `0x1000`。
 - **迈丛** —— 报告 `0x13` 上的 20 字节帧。命令 `0x4A`，第 5 字节为百分比，第 19 字节为前序字节的模 256 校验和。
+- **迈丛 A5 V3 / A7 Ultra** —— 报告 `0x11` 上的 65 字节 Feature 帧，payload 为 `bytes[2..]` XOR `0xFF`。A5 V3 走 VID `0x3837`，A7 Ultra 走 VID `0x5253`（独立 RealTek 接收器）。查询命令 `0x06`（先发 `0x03` bond 唤醒），payload[9] 为百分比、payload[10] 为充电状态。A7 Ultra 在 ost 命令后需约 50ms 让固件刷新 feature bank，无需等待中断-IN ACK。
 - **ROG** —— 向接收器的厂商集合（用途页 `0xFF00`）写入 64 字节帧 `02 12 01`。回复的第 6 字节为百分比，第 10 字节为设备上配置的低电量阈值。
 
 有一处值得记录的陷阱：罗技 `0x1004` 的**功能 0** 返回的是电压而非电量——设备空闲时它恒定为 3.85 V，与真实电量无关。返回百分比的是功能 1（`0x1E`）。早期版本读取功能 0，这正是 Voltide 显示的数值与 G HUB 不一致的原因。

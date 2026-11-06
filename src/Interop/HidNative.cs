@@ -306,9 +306,18 @@ namespace Voltide.Interop
                 if (err != HidNative.ERROR_IO_PENDING) return null;
                 if (HidNative.WaitForSingleObject(_evt, (uint)timeoutMs) != 0)
                 {
+                    // Finish the cancelled read before the next one starts.
+                    // Leaving it pending makes every later read on this handle fail,
+                    // so a device that is still reporting looks asleep.
                     HidNative.CancelIoEx(_handle, ref ov);
-                    return null;
+                    if (!HidNative.GetOverlappedResult(_handle, ref ov, out read, true)) return null;
                 }
+                else if (!HidNative.GetOverlappedResult(_handle, ref ov, out read, false)) return null;
+            }
+            else if (read <= 0)
+            {
+                // Overlapped ReadFile can complete immediately and leave the
+                // byte count at 0. The queued report is only visible here.
                 if (!HidNative.GetOverlappedResult(_handle, ref ov, out read, false)) return null;
             }
             if (read <= 0) return null;

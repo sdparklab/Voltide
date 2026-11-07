@@ -54,6 +54,7 @@
 | Xbox | Series X\|S、8BitDo 等 XInput 手柄 | 槽位 0–3 | 四档电量 |
 | 雷蛇 Razer | 毒蝰、炼狱蝰蛇、巴塞利斯蛇等 24 款无线鼠标 | VID `1532` | 91 字节 Feature |
 | 雷蛇 Razer | 旋风黑鲨 V2 专业版 | `1532:0555` | 64 字节音频通道 |
+| VXE | R1 星闪版（鼠标） | `373B:10C9` | 17 字节，和校验 0x4D |
 
 > 感谢 [@yiwluoq](https://github.com/yiwluoq)（ATK）、[@Mor16rty](https://github.com/Mor16rty)（IMECOO、Xbox）、
 > [@whitzard0421](https://github.com/whitzard0421)（K7 V2 Ultra+）、[@koobzx](https://github.com/koobzx)（A5 V3）、
@@ -136,6 +137,7 @@ powershell -ExecutionPolicy Bypass -File pack.ps1 -Target dist
 - **罗技** —— HID++ 2.0。特性 `0x1004` 的功能 1 返回百分比；老款接收器回退到特性 `0x1000`。
 - **迈丛** —— 报告 `0x13` 上的 20 字节帧。命令 `0x4A`，第 5 字节为百分比，第 19 字节为前序字节的模 256 校验和。
 - **ROG** —— 向接收器的厂商集合（用途页 `0xFF00`）写入 64 字节帧 `02 12 01`。回复的第 6 字节为百分比，第 10 字节为设备上配置的低电量阈值。
+- **VXE** —— 与 ATK 同属 Compx 方案：接收器 `373B:10C9` 的厂商集合（用途页 `0xFF02`）上发 17 字节帧 `08 04 00×14 49`，和校验 0x4D；回复第 6 字节为百分比、第 8–9 字节为大端毫伏数。接收器会先回显查询帧，需跳过。
 
 有一处值得记录的陷阱：罗技 `0x1004` 的**功能 0** 返回的是电压而非电量——设备空闲时它恒定为 3.85 V，与真实电量无关。返回百分比的是功能 1（`0x1E`）。早期版本读取功能 0，这正是 Voltide 显示的数值与 G HUB 不一致的原因。
 

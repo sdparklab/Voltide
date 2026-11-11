@@ -37,6 +37,7 @@ namespace Voltide.Core
             _providers.Add(new AtkHeadsetProvider());
             _providers.Add(new XInputProvider());
             _providers.Add(new RazerProvider());
+            _providers.Add(new EweadnProvider());
             _providers.Add(new HeadsetProvider());
         }
 

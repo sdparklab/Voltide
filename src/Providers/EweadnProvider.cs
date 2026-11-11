@@ -149,15 +149,30 @@ namespace Voltide.Providers
                     if (reply == null) continue;
 
                     int percent;
-                    if (!TryParse(reply, out percent)) continue;
+                    bool charging;
+                    if (!TryParse(reply, out percent, out charging)) continue;
 
                     r.Raw = Hex(reply, 16);
-                    r.Percent = percent;
-                    r.Level = BatteryMath.FromPercent(percent);
                     r.Online = true;
                     r.Sleeping = false;
                     r.Error = null;
-                    r.Detail = "2.4G";
+                    r.Charging = charging;
+                    r.ChargingKnown = true;
+
+                    if (charging)
+                    {
+                        // No trustworthy level on cable, so the card shows the
+                        // state alone instead of a number that is not real.
+                        r.Percent = null;
+                        r.Level = BatteryLevel.Unknown;
+                        r.Detail = "2.4G · 充电中";
+                    }
+                    else
+                    {
+                        r.Percent = percent;
+                        r.Level = BatteryMath.FromPercent(percent);
+                        r.Detail = "2.4G";
+                    }
                     return r;
                 }
 
@@ -192,23 +207,28 @@ namespace Voltide.Providers
         }
 
         /// <summary>
-        /// Accepts only a complete battery reply. The receiver answers the very
-        /// next read with a short 03 50 02 ... acknowledgement that carries no
-        /// data, so the payload length in byte 3 and the A5 5A footer are both
-        /// required before the percent byte is trusted.
+        /// Byte 6 packs two fields: bit 7 is the charging flag, the low seven bits
+        /// are the level. On cable the level is derived from the charging voltage
+        /// and races to 100 no matter how full the battery really is — a 52% mouse
+        /// read 100 within two minutes of being plugged in — so while charging the
+        /// level is discarded rather than shown.
         /// </summary>
-        internal static bool TryParse(byte[] frame, out int percent)
+        internal static bool TryParse(byte[] frame, out int percent, out bool charging)
         {
             percent = 0;
+            charging = false;
 
             if (frame == null || frame.Length != FrameSize) return false;
             if (frame[0] != ReportId) return false;
             if (frame[1] != Marker) return false;
             if (frame[3] != PayloadLength) return false;
             if (frame[13] != FooterA || frame[14] != FooterB) return false;
-            if (frame[6] > 100) return false;
 
-            percent = frame[6];
+            charging = (frame[6] & 0x80) != 0;
+            int level = frame[6] & 0x7F;
+            if (level > 100) return false;
+
+            percent = level;
             return true;
         }
 

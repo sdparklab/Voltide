@@ -39,7 +39,9 @@ namespace Voltide.Providers
             Dictionary<string, HidDeviceInfo> candidates = new Dictionary<string, HidDeviceInfo>();
             foreach (HidDeviceInfo h in catalog)
             {
-                if (h.VendorId != MchoseVid) continue;
+                // Z75S uses a SINOWEALTH receiver with the same battery protocol.
+                bool z75s = h.VendorId == 0x258A && h.ProductId == 0x01BB;
+                if (h.VendorId != MchoseVid && !z75s) continue;
                 if (h.UsagePage != 0xFF02) continue;      // vendor collection
                 if (h.InputReportLength != 20) continue;
                 if (h.OutputReportLength != 20) continue;
@@ -213,6 +215,8 @@ namespace Voltide.Providers
         /// </summary>
         private static string ResolveModel(HidDeviceInfo device)
         {
+            if (device.VendorId == 0x258A && device.ProductId == 0x01BB)
+                return "Z75S";
             string product = device.ProductName;
 
             if (!string.IsNullOrWhiteSpace(product) &&

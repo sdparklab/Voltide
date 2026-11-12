@@ -43,6 +43,8 @@
 |---|---|---|---|
 | 罗技 | G304 / GPW3 / M750M / G102 / Unifying | VID `046D` | HID++ 2.0 |
 | 迈丛 MCHOSE | K99 v2、G75 Pro | `3554:FA09` | 20 字节帧 |
+| 迈丛 MCHOSE | Z75S | `258A:01BB` | 20 字节帧，2.4G |
+| 前行者 EWEADN | A5 Pro | `258A:0138` | 520 字节 Feature，2.4G 电量；有线端 `258A:0136` 接入时推定充电 |
 | 迈丛 MCHOSE | K7 V2 Ultra+ | `3837:1014` | 64 字节 |
 | 迈丛 MCHOSE | A5 V3 | VID `3837` | 65 字节 Feature |
 | ROG | AZOTH EXTREME（夜魔 Extreme） | `0B05:1ACE` | 64 字节帧 |

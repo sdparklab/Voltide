@@ -34,6 +34,7 @@ namespace Voltide.Core
         public ushort ProductId;
         public string HidPath;
         public string ProviderName;
+        public string ReceiverId;    // shared receiver identity for an explicitly paired child
         public bool IsCharging;
     }
 

@@ -27,6 +27,12 @@ namespace Voltide.Core
         {
             _providers.Add(new LogitechProvider());
             _providers.Add(new MchoseProvider());
+            _providers.Add(new MchoseA7UltraProvider());
+            _providers.Add(new VxeProvider());
+            _providers.Add(new EweadnProvider());
+            _providers.Add(new EweadnA5ProProvider());
+            _providers.Add(new DareuA950MouseProvider());
+            _providers.Add(new MchoseV9HeadsetProvider());
             _providers.Add(new MchoseK7MouseProvider());
             _providers.Add(new MchoseA5MouseProvider());
             _providers.Add(new AsusRogProvider());
@@ -36,6 +42,10 @@ namespace Voltide.Core
             _providers.Add(new AtkMouseProvider());
             _providers.Add(new AtkHeadsetProvider());
             _providers.Add(new XInputProvider());
+            _providers.Add(new X7MouseProvider());
+            _providers.Add(new XiberiaT7Provider());
+            _providers.Add(new DualSenseProvider());
+            _providers.Add(new RapooProvider());
             _providers.Add(new RazerProvider());
             _providers.Add(new HeadsetProvider());
         }

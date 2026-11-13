@@ -219,7 +219,14 @@ namespace Voltide.Interop
     /// One open HID handle. Uses overlapped I/O so a blocking read never
     /// races a write on the same handle (that combination kills the process).
     /// </summary>
-    public sealed class HidSession : IDisposable
+    internal interface IHidReportSession : IDisposable
+    {
+        bool Write(byte[] report, int timeoutMs);
+        byte[] Read(int timeoutMs);
+        void Flush(int idleMs);
+    }
+
+    public sealed class HidSession : IHidReportSession
     {
         private IntPtr _handle;
         private IntPtr _evt;
@@ -306,7 +313,11 @@ namespace Voltide.Interop
                 if (err != HidNative.ERROR_IO_PENDING) return null;
                 if (HidNative.WaitForSingleObject(_evt, (uint)timeoutMs) != 0)
                 {
+                    // Finish the cancelled read before the next one starts. Leaving it
+                    // pending makes the next ReadFile fail, which showed up as a device
+                    // that was clearly in use but reported as asleep.
                     HidNative.CancelIoEx(_handle, ref ov);
+                    HidNative.GetOverlappedResult(_handle, ref ov, out read, true);
                     return null;
                 }
                 if (!HidNative.GetOverlappedResult(_handle, ref ov, out read, false)) return null;

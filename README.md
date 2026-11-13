@@ -1,6 +1,7 @@
 <p align="center">
   <img src="docs/icon.png" width="112" alt="Voltide">
 </p>
+
 <h1 align="center">Voltide</h1>
 
 <p align="center">
@@ -41,20 +42,44 @@
 
 | 品牌 | 设备 | 匹配 | 协议 |
 |---|---|---|---|
-| 罗技 | G304 / GPW3 / M750M / G102 / Unifying | VID `046D` | HID++ 2.0 |
+| 罗技 Logitech | G304 / GPW3 / M750M / G102 / Unifying | VID `046D` | HID++ 2.0 |
 | 迈丛 MCHOSE | K99 v2、G75 Pro | `3554:FA09` | 20 字节帧 |
+| 迈丛 MCHOSE | Z75S | `258A:01BB` | 20 字节帧 |
 | 迈丛 MCHOSE | K7 V2 Ultra+ | `3837:1014` | 64 字节 |
 | 迈丛 MCHOSE | A5 V3 | VID `3837` | 65 字节 Feature |
-| ROG | AZOTH EXTREME（夜魔 Extreme） | `0B05:1ACE` | 64 字节帧 |
-| ROG | Delta II、Pelta | VID `0B05` | 64 字节，0xFF00 |
-| 泰度 TAIDU | TSG809 | VID `A8A5` | 厂商自定义 |
-| IMECOO | P1 | `3554:FB34` | 17 字节 |
-| ATK | A9 Air 大师+（鼠标） | `373B:1278` | 17 字节，和校验 0x4D |
-| ATK | N9 V2 Ultimate（耳机） | `373B:1262` | 64 字节，report 0x55 |
-| Xbox | Series X\|S、8BitDo 等 XInput 手柄 | 槽位 0–3 | 四档电量 |
+| 迈丛 MCHOSE | A7 Ultra | VID `5253` | 厂商自定义 |
+| 迈丛 MCHOSE | V9 Turbo+（耳机） | — | 厂商自定义 |
+| ROG | AZOTH EXTREME（夜魔 Extreme） | `0B05:1ACE` | 64 字节帧；Omni 键鼠分离（实验性） |
+| ROG | Delta II、Pelta（耳机） | VID `0B05` | 64 字节，0xFF00 |
 | 雷蛇 Razer | 毒蝰、炼狱蝰蛇、巴塞利斯蛇等 24 款无线鼠标 | VID `1532` | 91 字节 Feature |
 | 雷蛇 Razer | 旋风黑鲨 V2 专业版 | `1532:0555` | 64 字节音频通道 |
+| ATK | A9 Air 大师+ / F1 V3 Ultimate+ | `373B:1278` | 17 字节，和校验 0x4D |
+| ATK | N9 V2 Ultimate（耳机） | `373B:1262` | 64 字节，report 0x55 |
+| VXE | R1 | `373B:10C9` | 17 字节（Compx 方案） |
+| 泰度 TAIDU | TSG809 | VID `A8A5` | 厂商自定义 |
+| IMECOO | P1 | `3554:FB34` | 17 字节 |
+| 前行者 EWEADN | S9 Pro | `372E:103D` | 厂商自定义 |
+| 前行者 EWEADN | A5 Pro | `258A:0138` | 520 字节 Feature |
+| XIBERIA | T7（耳机） | `36F9:F008` | 64 字节 |
+| CROCIRIS | X7 | `36F9:AA20` | 厂商自定义 |
+| 雷柏 RAPOO | VT3S | `24AE:1411` | 64 字节 |
+| 达尔优 DAREU | A950 AIR V2 | — | 厂商自定义 |
+| Sony | PS5 / PS5 EDGE | `054C:0CE6` / `0DF2` | HID |
+| Xbox | Series X\|S、8BitDo 等 XInput 手柄 | 槽位 0–3 | 四档电量 |
 
+> 本轮新增设备的适配由以下网友在真实硬件上逆向并验证：
+> [@RealRayTan](https://github.com/RealRayTan)（PS5）、
+> [@Yim-7](https://github.com/Yim-7)（XIBERIA T7、CROCIRIS X7）、
+> [@CLR0512](https://github.com/CLR0512)（VXE R1）、
+> [@waitter-01](https://github.com/waitter-01)（MCHOSE V9、DAREU A950）、
+> [@HSOTrany80](https://github.com/HSOTrany80)（MCHOSE A7）、
+> [@study-yang](https://github.com/study-yang)（EWEADN S9 Pro）、
+> [@LinWeiLong](https://github.com/LinWeiLong)（雷柏 VT3S）、
+> [@yuanmie](https://github.com/yuanmie)（EWEADN A5 Pro、Z75S）、
+> [@znc15](https://github.com/znc15)（ROG Omni 键鼠分离）、
+> [@WeiqiaoCode](https://github.com/WeiqiaoCode)（刷新间隔崩溃修复）。
+>
+> 一并致谢的早期贡献者：[yiwluoq](https://github.com/yiwluoq)（ATK）、[Mor16rty](https://github.com/Mor16rty)（IMECOO、Xbox）、[whitzard0421](https://github.com/whitzard0421)（K7 V2 Ultra+）、[koobzx](https://github.com/koobzx)（A5 V3）、[ptaritsu](https://github.com/ptaritsu)（TAIDU）、[Cantrarella](https://github.com/Cantrarella)（ROG Delta II / Pelta），以及 B 站网友 木兮丶念旧（雷蛇与狼蛛协议）。
 > 感谢 [@yiwluoq](https://github.com/yiwluoq)（ATK）、[@Mor16rty](https://github.com/Mor16rty)（IMECOO、Xbox）、
 > [@whitzard0421](https://github.com/whitzard0421)（K7 V2 Ultra+）、[@koobzx](https://github.com/koobzx)（A5 V3）、
 > [@ptaritsu](https://github.com/ptaritsu)（TAIDU）、[@Cantrarella](https://github.com/Cantrarella)（ROG Delta II / Pelta）
@@ -142,7 +167,7 @@ powershell -ExecutionPolicy Bypass -File pack.ps1 -Target dist
 ## 已知限制
 
 - 从未上报过电量的设备在休眠时无法被查询唤醒，将显示 `--`，直至被使用。
-- ROG 接收器同时服务于其他外设。若其配对的是鼠标而非键盘，Voltide 仍会将其标记为键盘。
+- **ROG Omni 键鼠分离为实验性功能**：已实现配对表读取与按报告 ID 分通道查询，作者在 Strix Scope II 96 Wireless + Harpe Ace 上验证过（100% / 3%）。若接收器配对表无应答，会回退到只读键盘通道；覆盖的鼠标型号仍有待补充。
 - 共享同一接收器的无线设备通过接收器上报，而非各自独立上报。
 - 同品牌但不同型号的设备会被识别为现有型号。适配层目前按厂商与接口特征匹配，尚未区分具体型号。
 - 迈丛与狼蛛共用 USB 标识（`3554:FA09`）。目前仅适配迈丛的查询协议，狼蛛键盘可能被识别为迈丛型号，读数也可能不正确。两者需要通过监听设备主动上报来区分，尚未实现。
@@ -152,4 +177,4 @@ powershell -ExecutionPolicy Bypass -File pack.ps1 -Target dist
 
 MIT，详见 [LICENSE](LICENSE)。
 
-设计与开发：[Joko](https://github.com/
+设计与开发：[Joko](https://github.com/sdparklab)。

@@ -176,7 +176,12 @@ namespace Voltide.Providers
                     r.Raw = Hex(bat);
                     r.Percent = level;
                     r.Level = BatteryMath.FromPercent(level);
-                    r.Charging = (bat[5] & 0x02) != 0;
+                    // byte 5 means different things per feature:
+                    //   0x1000  bit field - bit0 = charging, bit1 = external power
+                    //   0x1004  enum      - 0 = discharging, 1 = charging, 2 = full
+                    // Testing bit 0 is correct for both, and stops a battery-powered
+                    // G304 (bit1 set) from reading as "charging".
+                    r.Charging = (bat[5] & 0x01) != 0;
                     r.Detail = "HID++ 2.0";
                     r.Online = true;
                 }

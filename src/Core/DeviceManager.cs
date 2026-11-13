@@ -48,6 +48,7 @@ namespace Voltide.Core
             _providers.Add(new RapooProvider());
             _providers.Add(new RazerProvider());
             _providers.Add(new HeadsetProvider());
+            _providers.Add(new XiberiaT7Provider());
         }
 
         public List<DeviceSnapshot> Snapshot()

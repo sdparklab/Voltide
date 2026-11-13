@@ -5,6 +5,7 @@
 <h1 align="center">Voltide</h1>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/version-2.1.5-74dd7c" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-000000?logo=windows&logoColor=white" alt="Platform">
   <img src="https://img.shields.io/badge/.NET%20Framework-4.8-512BD4" alt=".NET">
   <img src="https://img.shields.io/badge/size-8.3%20MB-74dd7c" alt="Size">

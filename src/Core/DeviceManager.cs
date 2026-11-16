@@ -27,6 +27,7 @@ namespace Voltide.Core
         {
             _providers.Add(new LogitechProvider());
             _providers.Add(new MchoseProvider());
+            _providers.Add(new VgnProvider());
             _providers.Add(new MchoseA7UltraProvider());
             _providers.Add(new VxeProvider());
             _providers.Add(new EweadnProvider());

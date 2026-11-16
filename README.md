@@ -46,6 +46,7 @@
 | 罗技 Logitech | G304 / GPW3 / M750M / G102 / Unifying | VID `046D` | HID++ 2.0 |
 | 迈丛 MCHOSE | K99 v2、G75 Pro | `3554:FA09` | 20 字节帧 |
 | 迈丛 MCHOSE | Z75S | `258A:01BB` | 20 字节帧 |
+| VGN | V98 Pro（2.4G 接收器 / 有线） | `320F:5088` / `5055` | 64 字节，report 4，命令 `0x1A` |
 | 迈丛 MCHOSE | K7 V2 Ultra+ | `3837:1014` | 64 字节 |
 | 迈丛 MCHOSE | A5 V3 | VID `3837` | 65 字节 Feature |
 | 迈丛 MCHOSE | A7 Ultra | VID `5253` | 厂商自定义 |

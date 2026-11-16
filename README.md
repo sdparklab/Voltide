@@ -52,6 +52,7 @@
 | 迈丛 MCHOSE | V9 Turbo+（耳机） | — | 厂商自定义 |
 | ROG | AZOTH EXTREME（夜魔 Extreme） | `0B05:1ACE` | 64 字节帧；Omni 键鼠分离（实验性） |
 | ROG | Delta II、Pelta（耳机） | VID `0B05` | 64 字节，0xFF00 |
+| SteelSeries | Arctis Nova Pro Wireless（耳机；X 版待实测） | `1038:12E0` / `12E5` | 64 字节，0xFFC0，命令 `06 B0`，九档 |
 | 雷蛇 Razer | 毒蝰、炼狱蝰蛇、巴塞利斯蛇等 24 款无线鼠标 | VID `1532` | 91 字节 Feature |
 | 雷蛇 Razer | 旋风黑鲨 V2 专业版 | `1532:0555` | 64 字节音频通道 |
 | ATK | A9 Air 大师+ / F1 V3 Ultimate+ | `373B:1278` | 17 字节，和校验 0x4D |

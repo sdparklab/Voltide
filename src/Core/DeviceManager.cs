@@ -37,6 +37,7 @@ namespace Voltide.Core
             _providers.Add(new MchoseA5MouseProvider());
             _providers.Add(new AsusRogProvider());
             _providers.Add(new AsusHeadsetProvider());
+            _providers.Add(new SteelSeriesNovaProvider());
             _providers.Add(new TaiduProvider());
             _providers.Add(new ImecooProvider());
             _providers.Add(new AtkMouseProvider());

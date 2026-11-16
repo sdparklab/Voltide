@@ -560,7 +560,7 @@ namespace Voltide.UI
                 if (snap.Info != null)
                 {
                     if (snap.Info.Brand != null) t.Brand = snap.Info.Brand.ToUpperInvariant();
-                    if (snap.Info.Model != null) t.Model = snap.Info.Model;
+                    t.Model = DeviceAliases.Get(snap.Info.Id) ?? snap.Info.Model ?? "";
                 }
 
                 DeviceReading r = snap.Reading;

@@ -23,6 +23,7 @@ namespace Voltide.UI
         public int? Percent;
         public bool GreyValue;   // sleeping row: last level shown dimmed
         public MenuRowKind Kind;
+        public Action Rename;
     }
 
     /// <summary>
@@ -165,7 +166,7 @@ namespace Voltide.UI
             if (hit != _hot)
             {
                 _hot = hit;
-                Cursor = (hit >= _rows.Count && hit <= _rows.Count + 1) ? Cursors.Hand : Cursors.Default;
+                Cursor = hit >= 0 ? Cursors.Hand : Cursors.Default;
                 StartAnim();
             }
             base.OnMouseMove(e);
@@ -185,7 +186,15 @@ namespace Voltide.UI
 
             int hit = RowAt(e.Y);
 
-            if (hit == _rows.Count && _autostartEnabled)
+            if (hit >= 0 && hit < _rows.Count)
+            {
+                Action rename = _rows[hit].Rename;
+                if (rename != null)
+                {
+                    BeginInvoke(new MethodInvoker(rename));
+                }
+            }
+            else if (hit == _rows.Count && _autostartEnabled)
             {
                 // Autostart row: flip the switch and let the host write the Run entry.
                 _autostartOn = !_autostartOn;

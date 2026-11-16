@@ -47,6 +47,7 @@ namespace Voltide.Core
             _providers.Add(new DualSenseProvider());
             _providers.Add(new RapooProvider());
             _providers.Add(new RazerProvider());
+            _providers.Add(new XinmengProvider());
             _providers.Add(new HeadsetProvider());
         }
 

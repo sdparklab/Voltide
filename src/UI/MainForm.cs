@@ -401,21 +401,19 @@ namespace Voltide.UI
                 }
                 else if (a != null)
                 {
-                    // No fresh reading. Keep the level where it is, but do NOT write it
-                    // back into Percent: that made a switched-off mouse sit on "90%"
-                    // forever with nothing on the card saying the number was stale.
-                    // The card shows "--", dims, and draws no liquid instead.
+                    // 无新电量时保留动画中的历史值，不写回当前读数。
+                    // 历史值由卡片灰色显示，避免被当作实时电量。
                     target = a.Target;
                 }
-                else if (s.Reading.Sleeping)
+                else if (s.Reading.Sleeping || (s.Reading.Online && s.Reading.Charging))
                 {
-                    // first sight of a device that is already asleep: show the card
-                    // empty, its text reads "--" and the status says 设备休眠
+                    // 首次读取仅有休眠或充电状态时也创建卡片，电量显示为“--”。
+                    // 例如 A5 Pro 充电时返回 0xFF，由卡片显示对应充电状态。
                     target = 0f;
                 }
                 else
                 {
-                    continue;   // nothing to show yet
+                    continue;   // 尚无可显示的电量或状态。
                 }
 
                 bool wasLevel = a != null && HasLevel(a.Snap);

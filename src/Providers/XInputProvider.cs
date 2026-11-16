@@ -7,30 +7,16 @@ using Voltide.Interop;
 namespace Voltide.Providers
 {
     /// <summary>
-    /// Xbox-compatible gamepads, read through XInput instead of a HID frame.
+    /// 兼容 Xbox 的手柄电量适配，通过 XInput 查询四个槽位。
     ///
-    /// A pad in Xbox mode does not expose a vendor HID collection at all: Windows
-    /// binds it to the Xbox Gaming Device driver and the only public way in is
-    /// XInput. There is no report to build and no dongle to wake, so this adapter
-    /// looks nothing like the mouse ones — Discover() ignores the HID catalog and
-    /// walks the four XInput slots instead.
+    /// XInputGetBatteryInformation 返回电池类型和四档电量：
+    /// BatteryType：0 未连接，1 有线，2 碱性电池，3 镍氢电池。
+    /// BatteryLevel：0 空，1 低，2 中，3 满。
+    /// 界面将四档映射为 5%、20%、50%、100%，并在详情标注“XInput 四档”。
     ///
-    /// The catch is resolution. XInputGetBatteryInformation returns a step, not a
-    /// percentage:
-    ///
-    ///     BatteryType  0 disconnected, 1 wired, 2 alkaline, 3 NiMH
-    ///     BatteryLevel 0 empty, 1 low, 2 medium, 3 full
-    ///
-    /// The rest of this app is built around a percentage (card, liquid, tray row),
-    /// so each step is shown as the middle of its band and Detail() says so:
-    ///
-    ///     full -> 100, medium -> 50, low -> 20, empty -> 5
-    ///
-    /// Treat the number as a four-notch gauge, not a measurement. A wired pad
-    /// reports type 1 and is shown as 100% charging, which is what it is.
-    ///
-    /// Verified on 8BitDo Ultimate 3E Xbox (VID 2DC8 / PID 202F, 2.4G): type 3,
-    /// level 2 while the cell was half charged.
+    /// 有线类型缺少真实电量和充电状态，本适配器沿用 100% 充电的显示方式。
+    /// 具有专用 HID 电量适配器的已知型号通过 VID/PID 排除，避免重复卡片。
+    /// 已有适配记录覆盖 8BitDo Ultimate 3E Xbox（2DC8:202F）的 2.4G 电量读取。
     /// </summary>
     public class XInputProvider : IDeviceProvider
     {
@@ -46,6 +32,11 @@ namespace Voltide.Providers
             {
                 if (!XInputNative.Connected(slot)) continue;
 
+                // 已有专用 HID 电量适配的型号跳过 XInput 卡片，
+                // 避免同一手柄额外显示“有线 100%”的读数。
+                ushort vid, pid;
+                if (XInputNative.Ids(slot, out vid, out pid) && LeadjoyProvider.Owns(vid, pid)) continue;
+
                 DeviceInfo d = new DeviceInfo();
                 d.Id = "xinput-" + slot;
                 d.Brand = "XBOX";
@@ -54,8 +45,7 @@ namespace Voltide.Providers
                 d.Name = "Xbox 手柄";
                 d.Kind = DeviceKind.Other;
 
-                // No HID handle exists for this device; the slot number is the
-                // address. Encoded here so Read() stays stateless.
+                // 将槽位编码为查询地址，读取时无需保存额外的设备状态。
                 d.HidPath = "@xinput:" + slot;
                 d.ProviderName = Name;
                 found.Add(d);
@@ -97,8 +87,7 @@ namespace Voltide.Providers
 
             if (info.BatteryType == 1)
             {
-                // Wired: the pad runs off the cable. XInput has no charge flag,
-                // and a cable is the closest thing to one.
+                // XInput 的有线类型没有独立充电标志，此处沿用有线充电的显示方式。
                 r.Percent = 100;
                 r.Level = BatteryLevel.Full;
                 r.Charging = true;
@@ -137,8 +126,7 @@ namespace Voltide.Providers
         }
 
         /// <summary>
-        /// Middle of each band. XInput refuses to be more precise than this, and
-        /// rounding up would make a half-full pad read as nearly full.
+        /// 将四档电量转换为界面百分比；数值仅表示档位，不代表精确测量。
         /// </summary>
         private static int? PercentFor(byte level)
         {
@@ -151,9 +139,8 @@ namespace Voltide.Providers
     }
 
     /// <summary>
-    /// XInput1_4 ships with Windows 10+; 1_3 covers 8 and 8.1. Both are probed at
-    /// call time rather than at load, so a machine without either simply reports
-    /// no gamepads instead of failing to start the app.
+    /// 按需调用 XInput 1.4，状态和电量查询失败时回退到 1.3。
+    /// 缺少 DLL 或入口时返回失败，避免影响应用启动。
     /// </summary>
     internal static class XInputNative
     {
@@ -175,6 +162,29 @@ namespace Voltide.Providers
 
         [DllImport("XInput1_3.dll", EntryPoint = "XInputGetBatteryInformation")]
         private static extern uint GetBattery13(uint index, byte devType, out BatteryInfo info);
+
+        // 通过序号 108 调用未公开的 XInputGetCapabilitiesEx。
+        // 返回结构以前 20 字节的 XINPUT_CAPABILITIES 开头，随后为 VID、PID 和版本号。
+        [DllImport("XInput1_4.dll", EntryPoint = "#108")]
+        private static extern uint GetCapabilitiesEx14(uint one, uint index, uint flags, byte[] caps);
+
+        /// <summary>读取 XInput 槽位对应设备的 VID/PID；调用不可用或失败时返回 false。</summary>
+        internal static bool Ids(int slot, out ushort vid, out ushort pid)
+        {
+            vid = 0;
+            pid = 0;
+            byte[] caps = new byte[32];
+            try
+            {
+                if (GetCapabilitiesEx14(1, (uint)slot, 0, caps) != 0) return false;
+            }
+            catch (DllNotFoundException) { return false; }
+            catch (EntryPointNotFoundException) { return false; }
+
+            vid = BitConverter.ToUInt16(caps, 20);
+            pid = BitConverter.ToUInt16(caps, 22);
+            return true;
+        }
 
         internal static bool Connected(int slot)
         {

@@ -65,6 +65,7 @@
 | CROCIRIS | X7 | `36F9:AA20` | 厂商自定义 |
 | 雷柏 RAPOO | VT3S | `24AE:1411` | 64 字节 |
 | 达尔优 DAREU | A950 AIR V2 | — | 厂商自定义 |
+| 动感指尖 LEADJOY | 光剑 Saber Plus（2.4G 手柄） | `4131:3519` | 0xFF80，A5 短帧 + MessagePack |
 | Sony | PS5 / PS5 EDGE | `054C:0CE6` / `0DF2` | HID |
 | Xbox | Series X\|S、8BitDo 等 XInput 手柄 | 槽位 0–3 | 四档电量 |
 

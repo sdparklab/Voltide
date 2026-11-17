@@ -17,12 +17,13 @@ namespace Voltide.Providers
     /// 接收器即自动绑定。接收器固件为德盛（DeSheng）方案，VID 为 36F9。
     ///
     /// 电量查询走 64 字节厂商集合的中断 OUT/IN（write/read，非 Feature Report）：
-    ///   请求 64B : 55 65 00 00 00 ...
+    ///   请求 64B : 55 65 01 00 00 ...
     ///                    |  |  |
-    ///                    |  |  +-- 设备索引（单耳机固定 0）
+    ///                    |  |  +-- 设备索引：0 = 接收器供电口径（恒 100），
+    ///                    |  |             1 = 耳机本体电池（真实电量，本实现使用）
     ///                    |  +----- 命令 0x65 = 查询电量
     ///                    +-------- Report ID 0x55
-    ///   回复 64B : 55 65 00 4B ...
+    ///   回复 64B : 55 65 01 2A ...
     ///                          |
     ///                          +-- 第 4 字节（索引 3）= 电量百分比 0-100
     ///
@@ -36,7 +37,13 @@ namespace Voltide.Providers
 
         private const byte MainReportId = 0x55;
         private const byte CmdBattery = 0x65;
-        private const byte DeviceIndex = 0x00;
+
+        // 索引 0 是接收器的“供电口径”，2.4G 接收器插着就固定回 100，曾被误当电量；
+        // 索引 1 才是耳机本体的真实电池电量。2026-11-17 真机实测：
+        //   55 65 00 -> 55 65 00 64（恒 100）
+        //   55 65 01 -> 55 65 01 25（37%），数分钟后同命令回 55 65 01 2A（42%）
+        // 读数随电池真实变化，故电量必须走索引 1。
+        private const byte DeviceIndex = 0x01;
 
         private const int BatteryIndex = 3;
 
@@ -160,6 +167,8 @@ namespace Voltide.Providers
                     if (reply.Length < BatteryIndex + 1) continue;
                     if (reply[0] != MainReportId) continue;
                     if (reply[1] != CmdBattery) continue;
+                    // 接收器还会主动推送其他索引的帧，只接受耳机本体（索引 1）的应答。
+                    if (reply[2] != DeviceIndex) continue;
 
                     return reply;
                 }

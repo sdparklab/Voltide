@@ -26,6 +26,7 @@ namespace Voltide.Core
         public DeviceManager()
         {
             _providers.Add(new LogitechProvider());
+            _providers.Add(new KeychronM6Provider());
             _providers.Add(new MchoseProvider());
             _providers.Add(new MchoseA7UltraProvider());
             _providers.Add(new VxeProvider());

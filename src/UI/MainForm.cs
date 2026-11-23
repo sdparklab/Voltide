@@ -127,6 +127,10 @@ namespace Voltide.UI
 
         /// <summary>Private message the frame clock posts to wake the UI thread.</summary>
         private const int WmFrame = 0x800A;
+        private const int WmDeviceChange = 0x0219;
+        private const int DbtDeviceNodesChanged = 0x0007;
+        private const int DbtDeviceArrival = 0x8000;
+        private const int DbtDeviceRemoveComplete = 0x8004;
 
         /// <summary>Per-device animation state. One object instead of four parallel maps.</summary>
         private class CardAnim
@@ -958,6 +962,18 @@ namespace Voltide.UI
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == WmFrame) { OnTick(); return; }
+
+            if (m.Msg == WmDeviceChange)
+            {
+                int change = m.WParam.ToInt32();
+                if (change == DbtDeviceNodesChanged || change == DbtDeviceArrival ||
+                    change == DbtDeviceRemoveComplete)
+                {
+                    // The HID interface path changes when a receiver is replugged.
+                    // Refresh immediately instead of waiting for the polling timer.
+                    RequestRefresh();
+                }
+            }
 
             if (m.Msg == 0x020A)   // WM_MOUSEWHEEL
             {

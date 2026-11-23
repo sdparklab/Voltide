@@ -54,7 +54,7 @@
 | ROG | Delta II、Pelta（耳机） | VID `0B05` | 64 字节，0xFF00 |
 | 雷蛇 Razer | 毒蝰、炼狱蝰蛇、巴塞利斯蛇等 24 款无线鼠标 | VID `1532` | 91 字节 Feature |
 | 雷蛇 Razer | 旋风黑鲨 V2 专业版 | `1532:0555` | 64 字节音频通道 |
-| ATK | A9 Air 大师+ / F1 V3 Ultimate+ | `373B:1278` | 17 字节，和校验 0x4D |
+| ATK | A9 Air 大师+ / F1 V3 Ultimate+ / X1 Ultimate | `373B:1278` / `101B` / `103D` | 17 字节，和校验 0x4D |
 | ATK | N9 V2 Ultimate（耳机） | `373B:1262` | 64 字节，report 0x55 |
 | VXE | R1 | `373B:10C9` | 17 字节（Compx 方案） |
 | 泰度 TAIDU | TSG809 | VID `A8A5` | 厂商自定义 |

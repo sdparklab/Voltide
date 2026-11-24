@@ -21,6 +21,33 @@ $opts = @(
     '/r:System.Windows.Forms.dll'
 )
 
+# The Xbox pad battery over Bluetooth LE asks the WinRT GATT APIs. csc accepts the
+# per-namespace metadata Windows keeps in System32\WinMetadata, so the merged
+# Windows.winmd that only the Windows SDK ships is not required. If either half is
+# missing the provider compiles out and a BLE pad reports an unknown percentage -
+# never a fabricated one.
+$winmd = Join-Path $env:SystemRoot 'System32\WinMetadata'
+$facadeRoot = Join-Path ${env:ProgramFiles(x86)} 'Reference Assemblies\Microsoft\Framework\.NETFramework'
+$facade = $null
+foreach ($ver in @('v4.8', 'v4.7.2', 'v4.6.1', 'v4.5.2', 'v4.5.1', 'v4.5')) {
+    $candidate = Join-Path $facadeRoot (Join-Path $ver 'Facades\System.Runtime.dll')
+    if (Test-Path $candidate) { $facade = $candidate; break }
+}
+
+$bleOpts = @()
+if ($facade) {
+    $winmds = @('Windows.Foundation.winmd', 'Windows.Devices.winmd', 'Windows.Storage.winmd')
+    $missing = @($winmds | Where-Object { -not (Test-Path (Join-Path $winmd $_)) })
+    if ($missing.Count -eq 0) {
+        $bleOpts += '/r:' + $facade
+        foreach ($w in $winmds) { $bleOpts += '/r:' + (Join-Path $winmd $w) }
+        $bleOpts += '/define:HAVE_BLE_GATT'
+    }
+}
+if ($bleOpts.Count -eq 0) {
+    Write-Host 'WinRT metadata not found: building without the BLE battery path.'
+}
+
 $gui  = Join-Path $root 'Voltide.exe'
 $test = Join-Path $root 'Voltide-Test.exe'
 $ico  = Join-Path $root 'app.ico'
@@ -66,12 +93,12 @@ if (Test-Path $fontDir) {
 
 Write-Host "Compiling GUI ($($files.Count) files)..."
 
-& $csc /target:winexe /out:$gui @opts @iconOpt @resOpt $files
+& $csc /target:winexe /out:$gui @opts @bleOpts @iconOpt @resOpt $files
 if ($LASTEXITCODE -ne 0) { throw "GUI compile failed" }
 
 Write-Host "Compiling console test build..."
 
-& $csc /target:exe /out:$test @opts @iconOpt @resOpt $files
+& $csc /target:exe /out:$test @opts @bleOpts @iconOpt @resOpt $files
 if ($LASTEXITCODE -ne 0) { throw "Test compile failed" }
 
 Write-Host ""

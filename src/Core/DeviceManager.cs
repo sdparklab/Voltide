@@ -42,12 +42,14 @@ namespace Voltide.Core
             _providers.Add(new AtkMouseProvider());
             _providers.Add(new AtkHeadsetProvider());
             _providers.Add(new XInputProvider());
+            _providers.Add(new ZowieProvider());
             _providers.Add(new X7MouseProvider());
             _providers.Add(new XiberiaT7Provider());
             _providers.Add(new DualSenseProvider());
             _providers.Add(new RapooProvider());
             _providers.Add(new RazerProvider());
             _providers.Add(new HeadsetProvider());
+            _providers.Add(new InzoneH5Provider());
         }
 
         public List<DeviceSnapshot> Snapshot()

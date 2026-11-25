@@ -65,6 +65,9 @@
 | CROCIRIS | X7 | `36F9:AA20` | 厂商自定义 |
 | 雷柏 RAPOO | VT3S | `24AE:1411` | 64 字节 |
 | 达尔优 DAREU | A950 AIR V2 | — | 厂商自定义 |
+| 达尔优 DAREU | A950（2.4G 接收器） | `260D:1074` | 17 字节，Feature 下发 + 中断 IN 回传 |
+| 达尔优 DAREU | A950（有线 USB） | `260D:1084` | 同 2.4G 的 17 字节帧 |
+| 达尔优 DAREU | A950（蓝牙 BLE） | `25A7:FA6C` | Windows 蓝牙电量属性（无厂商通道） |
 | Sony | PS5 / PS5 EDGE | `054C:0CE6` / `0DF2` | HID |
 | Xbox | Series X\|S、8BitDo 等 XInput 手柄 | 槽位 0–3 | 四档电量 |
 
@@ -79,6 +82,7 @@
 > [@yuanmie](https://github.com/yuanmie)（EWEADN A5 Pro、Z75S）、
 > [@znc15](https://github.com/znc15)（ROG Omni 键鼠分离）、
 > [@WeiqiaoCode](https://github.com/WeiqiaoCode)（刷新间隔崩溃修复）。
+> [@likou123](https://github.com/likou123)（DAREU A950 2.4G 接收器 / 有线 / 蓝牙）。
 >
 > 一并致谢的早期贡献者：[yiwluoq](https://github.com/yiwluoq)（ATK）、[Mor16rty](https://github.com/Mor16rty)（IMECOO、Xbox）、[whitzard0421](https://github.com/whitzard0421)（K7 V2 Ultra+）、[koobzx](https://github.com/koobzx)（A5 V3）、[ptaritsu](https://github.com/ptaritsu)（TAIDU）、[Cantrarella](https://github.com/Cantrarella)（ROG Delta II / Pelta），以及 B 站网友 木兮丶念旧（雷蛇与狼蛛协议）。
 > 感谢 [@yiwluoq](https://github.com/yiwluoq)（ATK）、[@Mor16rty](https://github.com/Mor16rty)（IMECOO、Xbox）、

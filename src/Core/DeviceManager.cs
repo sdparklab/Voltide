@@ -35,12 +35,14 @@ namespace Voltide.Core
             _providers.Add(new MchoseV9HeadsetProvider());
             _providers.Add(new MchoseK7MouseProvider());
             _providers.Add(new MchoseA5MouseProvider());
+            _providers.Add(new MchoseV2Provider());
             _providers.Add(new AsusRogProvider());
             _providers.Add(new AsusHeadsetProvider());
             _providers.Add(new TaiduProvider());
             _providers.Add(new ImecooProvider());
             _providers.Add(new AtkMouseProvider());
             _providers.Add(new AtkHeadsetProvider());
+            _providers.Add(new FlydigiProvider());
             _providers.Add(new XInputProvider());
             _providers.Add(new X7MouseProvider());
             _providers.Add(new XiberiaT7Provider());

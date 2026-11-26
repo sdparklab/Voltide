@@ -588,6 +588,9 @@ namespace Voltide.UI
                 // Charging outranks the other states: a wired device can report no percentage
                 // while charging, and calling that "asleep" was wrong.
                 if (r.Charging) t.Status = "电池充电中";
+                // 在线却拿不到百分比：XInput 2.4G 接收器只会说"有线"，它自己并不转发
+                // 手柄电池。这跟"睡着了"是两回事，别混成同一句话。
+                else if (r.Online && !r.Percent.HasValue && !r.Sleeping) t.Status = "接收器无电量上报";
                 else if (r.Sleeping || !r.Online || !r.Percent.HasValue) t.Status = "设备休眠中";
                 else if (!r.ChargingKnown) t.Status = "充电状态未知";
                 else t.Status = "电池放电中";

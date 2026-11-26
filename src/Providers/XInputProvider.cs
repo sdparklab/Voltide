@@ -36,11 +36,48 @@ namespace Voltide.Providers
     {
         private const int MaxSlots = 4;
 
+        // A 2.4G dongle that speaks the Xbox 360 protocol reports BatteryType 1
+        // ("wired") to XInput — the receiver sits on USB power and never forwards
+        // the pad's own cell state. Its vendor HID collections are still on the bus,
+        // so their presence is what separates a dongle from a real cable.
+        private static readonly ushort[] DongleVids = new ushort[] { 0x37D7 };
+        private static bool _donglePresent;
+        private static string _dongleBrand;
+        private static string _dongleModel;
+
         public string Name { get { return "XInput"; } }
 
         public List<DeviceInfo> Discover(List<HidDeviceInfo> catalog)
         {
             List<DeviceInfo> found = new List<DeviceInfo>();
+
+            _donglePresent = false;
+            _dongleBrand = null;
+            _dongleModel = null;
+            if (catalog != null)
+            {
+                foreach (HidDeviceInfo h in catalog)
+                {
+                    if (Array.IndexOf(DongleVids, h.VendorId) >= 0) _donglePresent = true;
+
+                    // The dongle names the pad it speaks for on its game-controller
+                    // collection ("Controller (Flydigi Vader 5 Pro)"), which is the only
+                    // place a model name exists — XInput itself reports nothing.
+                    if (h.UsagePage == 0x0001 && h.Usage == 0x0005 &&
+                        !string.IsNullOrEmpty(h.ProductName))
+                    {
+                        string name = h.ProductName.Trim();
+                        int open = name.IndexOf('(');
+                        if (open >= 0 && name.EndsWith(")"))
+                            name = name.Substring(open + 1, name.Length - open - 2).Trim();
+                        if (name.Length > 0) { _dongleModel = name; _dongleBrand = BrandFor(name); }
+                    }
+                }
+            }
+
+            // 飞智那个 dongle 在时，手柄本身由 FlydigiProvider 用厂商报文读，
+            // 这里不再重复出一张 XInput 卡（它只会回"有线 / 满"，纯噪声）。
+            if (_donglePresent) return found;
 
             for (int slot = 0; slot < MaxSlots; slot++)
             {
@@ -48,10 +85,17 @@ namespace Voltide.Providers
 
                 DeviceInfo d = new DeviceInfo();
                 d.Id = "xinput-" + slot;
-                d.Brand = "XBOX";
-                d.Model = "CONTROLLER";
-                d.ShortModel = "XBOX " + (slot + 1);
-                d.Name = "Xbox 手柄";
+                d.Brand = _dongleBrand != null ? _dongleBrand : "XBOX";
+
+                string model = _dongleModel != null ? _dongleModel : "CONTROLLER";
+                if (d.Brand.Length > 0 && model.StartsWith(d.Brand, StringComparison.OrdinalIgnoreCase))
+                {
+                    model = model.Substring(d.Brand.Length).Trim();
+                    if (model.Length == 0) model = _dongleModel;
+                }
+                d.Model = model;
+                d.ShortModel = (d.Brand + " " + d.Model).Trim();
+                d.Name = d.ShortModel;
                 d.Kind = DeviceKind.Other;
 
                 // No HID handle exists for this device; the slot number is the
@@ -97,6 +141,18 @@ namespace Voltide.Providers
 
             if (info.BatteryType == 1)
             {
+                if (_donglePresent)
+                {
+                    // 2.4G 接收器刚上电的那几秒会先回 type=1/level=3（接收器自己"有线"），
+                    // 之后才切换到真正的 NiMH 档位。这段窗口里用上次落盘的读数，
+                    // 既不编造 100%，也不至于闪成 "--"。
+                    r.Level = BatteryLevel.Unknown;
+                    r.Detail = "XInput 2.4G 接收器";
+                    r.Raw = "type=1 level=" + info.BatteryLevel + " dongle";
+                    SeedFromStore(device, r);
+                    return r;
+                }
+
                 // Wired: the pad runs off the cable. XInput has no charge flag,
                 // and a cable is the closest thing to one.
                 r.Percent = 100;
@@ -119,7 +175,26 @@ namespace Voltide.Providers
             r.Level = BatteryMath.FromPercent(percent.Value);
             r.Detail = "XInput 四档";
             r.Raw = "type=" + info.BatteryType + " level=" + info.BatteryLevel;
+            ReadingStore.Save(device.Id, percent.Value, r.Charging, true, r.Raw);
             return r;
+        }
+
+        private static void SeedFromStore(DeviceInfo device, DeviceReading r)
+        {
+            int percent;
+            bool charging;
+            bool chargingKnown;
+            string raw;
+            DateTime at;
+            if (!ReadingStore.TryGet(device.Id, out percent, out charging, out chargingKnown, out raw, out at))
+                return;
+
+            r.Percent = percent;
+            r.Level = BatteryMath.FromPercent(percent);
+            r.Charging = charging;
+            r.ChargingKnown = chargingKnown;
+            r.Raw = raw;
+            r.UpdatedAt = at;
         }
 
         private static int SlotOf(DeviceInfo device)
@@ -134,6 +209,21 @@ namespace Voltide.Providers
             if (!int.TryParse(path.Substring(prefix.Length), out slot)) return -1;
             if (slot < 0 || slot >= MaxSlots) return -1;
             return slot;
+        }
+
+        /// <summary>Short brand tag for the card's first line, derived from the dongle's product string.</summary>
+        private static string BrandFor(string productName)
+        {
+            if (string.IsNullOrEmpty(productName)) return "XBOX";
+            string n = productName.ToUpperInvariant();
+            if (n.Contains("FLYDIGI") || productName.Contains("飞智")) return "FLYDIGI";
+            if (n.Contains("8BITDO")) return "8BITDO";
+            if (n.Contains("XBOX") || n.Contains("MICROSOFT")) return "XBOX";
+            if (n.Contains("SONY") || n.Contains("DUALSENSE")) return "SONY";
+
+            int space = productName.IndexOf(' ');
+            string first = space > 0 ? productName.Substring(0, space) : productName;
+            return first.ToUpperInvariant();
         }
 
         /// <summary>

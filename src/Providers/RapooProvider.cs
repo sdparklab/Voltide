@@ -26,6 +26,9 @@ namespace Voltide.Providers
     public class RapooProvider : IDeviceProvider
     {
         private const ushort VendorId = 0x24AE;
+        // VT3S ships as 24AE:1411; the MK-series combo receiver (24AE:1464,
+        // "Rapoo Gaming Device") pushes the exact same 19-byte frame, so the
+        // provider matches the collection shape instead of a single PID.
         private const ushort ProductId = 0x1411;
         private const ushort VendorPage = 0xFF00;
         private const ushort VendorUsage = 0x0002;
@@ -60,9 +63,9 @@ namespace Voltide.Providers
                 DeviceInfo device = new DeviceInfo();
                 device.Id = "rapoo-" + hid.VendorId.ToString("X4") + ":" + hid.ProductId.ToString("X4");
                 device.Brand = "RAPOO";
-                device.Model = "VT3S";
-                device.ShortModel = "VT3S";
-                device.Name = "RAPOO VT3S";
+                device.Model = ResolveModel(hid);
+                device.ShortModel = device.Model;
+                device.Name = "RAPOO " + device.Model;
                 device.Kind = DeviceKind.Mouse;
                 device.VendorId = hid.VendorId;
                 device.ProductId = hid.ProductId;
@@ -123,6 +126,13 @@ namespace Voltide.Providers
                         reading.Raw = _last.Raw;
                         reading.Detail = "2.4G";
                     }
+
+                    // 刚启动、鼠标本来就在休眠时内存里没有上一帧，回落到磁盘缓存，
+                    // 否则卡片只能显示 "--"，而它几分钟前才报过电量。
+                    if (!reading.Percent.HasValue) SeedFromStore(device, reading);
+                    else ReadingStore.Save(device.Id, reading.Percent.Value, reading.Charging,
+                                           reading.ChargingKnown, reading.Raw);
+
                     reading.Sleeping = true;
                     reading.Error = "设备休眠";
                     return reading;
@@ -147,6 +157,7 @@ namespace Voltide.Providers
                 reading.Raw = ToHex(report);
                 _last = reading;
                 _lastAt = reading.UpdatedAt;
+                ReadingStore.Save(device.Id, percent, charging, chargingKnown, reading.Raw);
                 return reading;
             }
             catch (Exception ex)
@@ -157,8 +168,28 @@ namespace Voltide.Providers
             }
         }
 
-        private int WaitForReport()
+        /// <summary>Disk cache fallback: the last value this device reported, even across restarts.</summary>
+        private static bool SeedFromStore(DeviceInfo device, DeviceReading reading)
         {
+            int percent;
+            bool charging;
+            bool chargingKnown;
+            string raw;
+            DateTime at;
+            if (!ReadingStore.TryGet(device.Id, out percent, out charging, out chargingKnown, out raw, out at))
+                return false;
+
+            reading.Percent = percent;
+            reading.Level = BatteryMath.FromPercent(percent);
+            reading.Charging = charging;
+            reading.ChargingKnown = chargingKnown;
+            reading.Raw = raw;
+            reading.UpdatedAt = at;
+            reading.Detail = "2.4G";
+            return true;
+        }
+
+        private int WaitForReport()        {
             if (_last == null) return FirstWaitMs;
             if ((DateTime.Now - _lastAt).TotalSeconds >= FreshSeconds) return FollowWaitMs;
             return DrainWaitMs;
@@ -218,11 +249,24 @@ namespace Voltide.Providers
         {
             return hid != null &&
                 hid.VendorId == VendorId &&
-                hid.ProductId == ProductId &&
                 hid.UsagePage == VendorPage &&
                 hid.Usage == VendorUsage &&
                 hid.InputReportLength >= PercentIndex + 1 &&
                 !string.IsNullOrEmpty(hid.Path);
+        }
+
+        /// <summary>
+        /// The receiver names itself "Rapoo Gaming Device" for every model, so the
+        /// product string only tells us the family. Known PIDs keep their model name.
+        /// </summary>
+        private static string ResolveModel(HidDeviceInfo hid)
+        {
+            if (hid.ProductId == ProductId) return "VT3S";
+
+            string model = hid.ProductName == null ? "" : hid.ProductName.Trim();
+            if (model.StartsWith("Rapoo ", StringComparison.OrdinalIgnoreCase)) model = model.Substring(6).Trim();
+            if (model.Length == 0) return "2.4G";
+            return model;
         }
 
         private void Close()

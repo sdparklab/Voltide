@@ -413,6 +413,13 @@ namespace Voltide.UI
                     // empty, its text reads "--" and the status says 设备休眠
                     target = 0f;
                 }
+                else if (s.Reading.Online)
+                {
+                    // Online but unable to report a level (an XInput 2.4G dongle only
+                    // says "wired"). Keep the card so the device is visible, with "--"
+                    // and its transport line instead of silently dropping it.
+                    target = 0f;
+                }
                 else
                 {
                     continue;   // nothing to show yet

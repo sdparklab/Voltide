@@ -142,9 +142,17 @@ namespace Voltide.Providers
                 IsMi02Path(hid.Path);
         }
 
+        /// <summary>
+        /// MI_02 接口判定。V7 Pro 的控制接口是单集合接口，路径形如
+        /// ...&amp;mi_02#9&amp;...（mi_02 后跟 '#'）；多集合接口则是 ...&amp;mi_02&amp;col01...。
+        /// 上游 K7 适配器的 "&amp;mi_02&amp;" 写法只覆盖后者，这里两种都接受。
+        /// </summary>
         private static bool IsMi02Path(string path)
         {
-            return path != null && path.IndexOf("&mi_02&", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (path == null) return false;
+            int i = path.IndexOf("&mi_02", StringComparison.OrdinalIgnoreCase);
+            return i >= 0 && i + 6 < path.Length &&
+                (path[i + 6] == '#' || path[i + 6] == '&');
         }
 
         private static string ToHex(byte[] report)

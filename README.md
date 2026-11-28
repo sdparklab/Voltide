@@ -47,6 +47,7 @@
 | 迈丛 MCHOSE | K99 v2、G75 Pro | `3554:FA09` | 20 字节帧 |
 | 迈丛 MCHOSE | Z75S | `258A:01BB` | 20 字节帧 |
 | 迈丛 MCHOSE | K7 V2 Ultra+ | `3837:1014` | 64 字节 |
+| 迈丛 MCHOSE | V7 Pro | `3837:101D` | 64 字节（0x0900） |
 | 迈丛 MCHOSE | A5 V3 | VID `3837` | 65 字节 Feature |
 | 迈丛 MCHOSE | A7 Ultra | VID `5253` | 厂商自定义 |
 | 迈丛 MCHOSE | V9 Turbo+（耳机） | — | 厂商自定义 |
